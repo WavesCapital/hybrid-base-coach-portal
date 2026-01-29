@@ -53,3 +53,19 @@
   - Use DO $$ blocks for conditional ALTER TABLE to make migrations idempotent
   - coach_programs has UNIQUE(coach_id, slug) constraint - must handle slug collisions in app code
 ---
+
+## [Iteration 3] 2026-01-29 - US-002B
+- Created Supabase Storage migration (005_storage_buckets.sql) for coach-pdfs and coach-photos buckets
+- coach-pdfs: private bucket, 50MB limit, coaches can only access their own folder (by auth.uid)
+- coach-photos: public bucket, 5MB limit, publicly readable, coaches manage their own folder
+- Storage policies use storage.foldername(name)[1] = auth.uid()::text for folder-based access control
+- Created lib/storage.ts with uploadPDF and uploadProfilePhoto helper functions
+- Both helpers use timestamp-prefixed filenames to prevent collisions
+- Files changed: supabase/migrations/005_storage_buckets.sql, lib/storage.ts, prd.json
+- **Learnings for future iterations:**
+  - Supabase Storage buckets are created via INSERT INTO storage.buckets, not DDL
+  - Use ON CONFLICT (id) DO NOTHING for idempotent bucket creation
+  - Storage policies go on storage.objects table, not on the bucket itself
+  - storage.foldername(name) returns array of folder segments - use [1] for top-level folder
+  - coach-pdfs is private (no public URL works without signed URL in production), but getPublicUrl still returns a URL string for storage reference
+---
