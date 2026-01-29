@@ -19,6 +19,11 @@
 - Theme spring configs: `theme.spring`, `theme.springLight`, `theme.springBouncy` for Framer Motion
 - ESLint 9 with eslint-config-expo flat config
 - When initializing Expo in non-empty dir, use temp dir and copy files over
+- Layout components in `components/layout/` - DashboardLayout wraps pages with Header + Sidebar (desktop) / BottomTabs (mobile)
+- Responsive breakpoint at 768px: useWindowDimensions().width >= 768 for desktop
+- Framer Motion AnimatePresence + motion.div used for layout transitions on web
+- Nav items: Dashboard (/), Programs (/programs), Profile (/profile)
+- usePathname() from expo-router for active route detection
 - Supabase migrations live in `supabase/migrations/` with numeric prefixes (001_, 002_, etc.)
 - Use `IF NOT EXISTS` / `ON CONFLICT DO NOTHING` for idempotent migrations
 - Test coach user_id is `00000000-0000-0000-0000-000000000001` (dummy UUID for MVP)
@@ -118,4 +123,24 @@
   - Exercise matching returns ExerciseMatch[] with confidence scores for UI badges
   - normalizeName is reusable for any name-comparison logic
   - Auto-created exercises get provider_source='coach_upload' to distinguish from curated ones
+---
+
+## [Iteration 7] 2026-01-29 - US-006
+- Created responsive dashboard layout with 4 components:
+  - `components/layout/DashboardLayout.tsx`: Main wrapper with responsive detection (768px breakpoint)
+  - `components/layout/Header.tsx`: Top bar with "Coach Portal" title and coach name/avatar
+  - `components/layout/Sidebar.tsx`: Desktop left sidebar with nav items (Dashboard, Programs, Profile)
+  - `components/layout/BottomTabs.tsx`: Mobile bottom tab navigation
+- Desktop (>=768px): Header + Sidebar on left + content area
+- Mobile (<768px): Header + content area + BottomTabs at bottom
+- Framer Motion AnimatePresence for smooth sidebar/tabs transitions on resize
+- Active route highlighting with neonPrimary color and indicator bars
+- usePathname from expo-router for route detection
+- Files changed: components/layout/DashboardLayout.tsx, Header.tsx, Sidebar.tsx, BottomTabs.tsx, prd.json
+- **Learnings for future iterations:**
+  - Framer Motion `motion.div` works in Expo web builds (rendered as HTML div)
+  - Use `as never` cast on router.push paths to avoid strict typing issues with expo-router
+  - useWindowDimensions is reactive - component re-renders on resize automatically
+  - AnimatePresence mode="wait" prevents layout flash during sidebar/tabs toggle
+  - Emoji icons (📊📋👤) work cross-platform for MVP; replace with proper icon library later
 ---
