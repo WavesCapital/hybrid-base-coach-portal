@@ -27,6 +27,9 @@
 - Supabase migrations live in `supabase/migrations/` with numeric prefixes (001_, 002_, etc.)
 - Use `IF NOT EXISTS` / `ON CONFLICT DO NOTHING` for idempotent migrations
 - Test coach user_id is `00000000-0000-0000-0000-000000000001` (dummy UUID for MVP)
+- Zustand stores in `state/` directory - useCoachStore for coach data + programs list
+- Reusable UI primitives in `components/ui/` - Card, Badge, Skeleton
+- Program-specific components in `components/program/` - ProgramCard, etc.
 
 ---
 
@@ -143,4 +146,21 @@
   - useWindowDimensions is reactive - component re-renders on resize automatically
   - AnimatePresence mode="wait" prevents layout flash during sidebar/tabs toggle
   - Emoji icons (📊📋👤) work cross-platform for MVP; replace with proper icon library later
+---
+
+## [Iteration 8] 2026-01-29 - US-007
+- Created program dashboard with ProgramCard components in DashboardLayout wrapper
+- Created state/useCoachStore.ts (Zustand) with fetchCoach and fetchPrograms actions querying Supabase
+- Created reusable UI components: Card, Badge, Skeleton/SkeletonCard in components/ui/
+- Created ProgramCard component showing title, duration, difficulty, status badge, focus tags
+- Updated app/index.tsx with full dashboard: programs grid (3-col desktop, 2-col tablet, 1-col mobile), loading skeletons, empty state with CTA
+- Status badge colors: draft=#FEEC4A, active=#00FF88, archived=#8D9299
+- Grid layout responsive via useWindowDimensions with 768px and 1024px breakpoints
+- Files changed: app/index.tsx, state/useCoachStore.ts, components/ui/Card.tsx, components/ui/Badge.tsx, components/ui/Skeleton.tsx, components/program/ProgramCard.tsx, prd.json
+- **Learnings for future iterations:**
+  - Zustand v5 uses `create<T>()((set) => ...)` pattern (no separate `StateCreator`)
+  - Use `as never` on router.push paths to avoid strict expo-router type checking
+  - Supabase queries return `data` typed as `any[]` - cast to specific types at call site
+  - Grid columns use percentage widths with gap calculation: `(100 - (columns-1) * 2) / columns`%
+  - Empty `StyleSheet.create({})` entries are fine for Pressable style arrays that need a base key
 ---
