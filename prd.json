@@ -81,7 +81,7 @@
         ".env.example"
       ],
       "dependsOn": [],
-      "passes": false,
+      "passes": true,
       "notes": "",
       "priority": 1
     },

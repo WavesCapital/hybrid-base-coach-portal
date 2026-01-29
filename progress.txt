@@ -1,0 +1,37 @@
+# Ralph Progress Log
+# Project: Coach Portal MVP
+# Location: /Users/wavescapital/hybrid-base-coach-portal
+# Started: Thu Jan 29 14:40:08 EST 2026
+#
+# This file is generated and maintained by Ralph.
+# See: https://github.com/thecgaigroup/ralph-cc-loop
+---
+
+## Codebase Patterns
+- Expo SDK 54 with Expo Router v6 (file-based routing in app/ directory)
+- Entry point is `expo-router/entry` in package.json (not App.tsx)
+- Dark theme default: background=#0A0A0A, text=#F5FAFF, muted=#8D9299
+- Test coach ID: `test-coach-uuid-0001` from lib/testCoach.ts
+- Supabase project ID: uevqwbdumouoghymcqtc
+- Backend URL: https://api.hybridbase.app
+- Quality checks: `npx tsc --noEmit`, `npx expo lint`, `npx expo export --platform web`
+- ESLint 9 with eslint-config-expo flat config
+- When initializing Expo in non-empty dir, use temp dir and copy files over
+
+---
+
+## [Iteration 1] 2026-01-29 - US-001
+- Initialized Expo project with TypeScript blank template (SDK 54)
+- Installed: expo-router, react-dom, react-native-web, @expo/metro-runtime, framer-motion, zustand, @supabase/supabase-js
+- Created folder structure: app/, components/, lib/, state/, types/
+- Set up Expo Router with file-based routing (app/_layout.tsx, app/index.tsx)
+- Created lib/supabase.ts (typed Supabase client) and lib/testCoach.ts (TEST_COACH_ID constant)
+- Created .env.local and .env.example with required env vars
+- Configured app.json with dark theme, web bundler: metro, scheme: coach-portal
+- Files changed: package.json, app.json, tsconfig.json, eslint.config.js, app/_layout.tsx, app/index.tsx, lib/supabase.ts, lib/testCoach.ts, .env.local, .env.example, .gitignore
+- **Learnings for future iterations:**
+  - `npx create-expo-app` won't run in a non-empty directory; use temp dir + copy
+  - ESLint auto-installs on first `npx expo lint` run (creates eslint.config.js)
+  - Empty directories cause lint errors - ensure directories have files before linting
+  - `expo-router/entry` must be set as "main" in package.json for routing to work
+---
