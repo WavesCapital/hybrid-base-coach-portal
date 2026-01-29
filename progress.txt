@@ -37,6 +37,9 @@
 - `useProgramStore` (Zustand) in `state/` for multi-step program creation flow state
 - Theme `as const` narrows string types - use `let x: string = theme.colors.x` for mutable color variables
 - Multi-select chip pattern: Pressable with conditional border/bg color, toggleArrayItem helper
+- Review components in `components/review/` - ExerciseReviewList, ExerciseReviewItem, ExercisePicker, ConfidenceBadge
+- Modal/ConfirmDialog in `components/ui/` - use absolute positioning with zIndex 1000+ for overlays
+- types/program.ts `Exercise` vs types/exercise.ts `Exercise` - alias as `ProgramExercise` / `DBExercise` when importing both
 
 ---
 
@@ -211,4 +214,25 @@
   - useProgramStore persists data across route navigations (Step 1 → Step 2 → Review), enabling back/forward without data loss
   - Upload components live in components/upload/ directory
   - File input on web: use `<input type="file" style={{display:"none"}} />` with ref.click() from Pressable
+---
+
+## [Iteration 11] 2026-01-29 - US-010
+- Created exercise review UI with inline editing at app/programs/new/review.tsx
+- Created components/review/ directory with 4 components:
+  - ConfidenceBadge.tsx: green checkmark (>90%), yellow warning (70-90%), red X (<70%) confidence indicators
+  - ExercisePicker.tsx: modal with search input querying exercises DB via Supabase ilike, debounced 300ms
+  - ExerciseReviewItem.tsx: individual exercise card with inline editing (sets/reps/rest/notes) and exercise name tap to open picker
+  - ExerciseReviewList.tsx: collapsible weeks with day sections, exercises, add/remove exercise buttons, confirm dialog
+- Created components/ui/Modal.tsx and ConfirmDialog.tsx reusable UI components
+- Extended useProgramStore with 5 new actions: updateExerciseSet, updateExerciseNotes, replaceExercise, removeExercise, addExercise
+- Review page shows summary stats (total/matched/low-confidence/unmatched) and navigation to preview
+- Files changed: app/programs/new/review.tsx, components/review/ConfidenceBadge.tsx, ExercisePicker.tsx, ExerciseReviewItem.tsx, ExerciseReviewList.tsx, components/ui/Modal.tsx, ConfirmDialog.tsx, state/useProgramStore.ts, prd.json
+- Browser verification: SKIPPED (dev server not running)
+- Manual verification recommended before merge
+- **Learnings for future iterations:**
+  - Review components live in components/review/ directory following the per-feature directory pattern
+  - Modal/ConfirmDialog use absolute positioning with zIndex 1000/1001 for overlay stacking
+  - ExercisePicker uses debounced Supabase ilike query (300ms delay) for responsive search
+  - useProgramStore actions use deeply nested immutable updates (map over weeks → days → exercises)
+  - Import aliasing needed when both types/program.ts and types/exercise.ts export `Exercise` - use `as ProgramExercise` / `as DBExercise`
 ---
