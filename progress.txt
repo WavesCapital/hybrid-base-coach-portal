@@ -33,6 +33,10 @@
 - Profile components in `components/profile/` - ProfileForm, SocialLinksForm
 - Platform.OS === "web" for web-only HTML elements (file input, etc.)
 - Social links stored as Record<string, string> in coaches.social_links JSONB column
+- Upload components in `components/upload/` - PDFUploader, ParsingProgress
+- `useProgramStore` (Zustand) in `state/` for multi-step program creation flow state
+- Theme `as const` narrows string types - use `let x: string = theme.colors.x` for mutable color variables
+- Multi-select chip pattern: Pressable with conditional border/bg color, toggleArrayItem helper
 
 ---
 
@@ -187,4 +191,24 @@
   - Social links stored as Record<string, string> in coaches.social_links JSONB column
   - Profile components in components/profile/ directory following existing pattern (program/ for program components)
   - Button component supports primary/secondary/outline variants with loading/disabled states
+---
+
+## [Iteration 10] 2026-01-29 - US-009
+- Created multi-step program creation flow: Step 1 (info form) and Step 2 (PDF upload + parsing pipeline)
+- Created state/useProgramStore.ts with Zustand for program creation state (form info, PDF URL, parsed program, exercise matches, parsing stage/error)
+- Created app/programs/new/index.tsx as redirect to /programs/new/info
+- Created app/programs/new/info.tsx: title, description, duration_weeks, difficulty (chip select), focus[] (multi-select chips), equipment[] (multi-select chips)
+- Created app/programs/new/upload.tsx: PDF upload triggers full pipeline (upload → extract → parse → match), shows progress, navigates to review on success
+- Created components/upload/PDFUploader.tsx: drag-drop styled zone with web file input, PDF validation (type + 50MB limit)
+- Created components/upload/ParsingProgress.tsx: 4-stage progress indicator with icons (uploading, extracting, parsing, matching), error display with retry button
+- Files changed: state/useProgramStore.ts, app/programs/new/index.tsx, app/programs/new/info.tsx, app/programs/new/upload.tsx, components/upload/PDFUploader.tsx, components/upload/ParsingProgress.tsx, prd.json
+- Browser verification: SKIPPED (dev server not running)
+- Manual verification recommended before merge
+- **Learnings for future iterations:**
+  - Theme uses `as const` which narrows string types - use `let x: string = theme.colors.x` for mutable color variables
+  - Import type statements should be at the top of the file, not inline at bottom (ESLint import/first rule)
+  - Chip/tag multi-select pattern: Pressable with conditional border/bg color based on selection state
+  - useProgramStore persists data across route navigations (Step 1 → Step 2 → Review), enabling back/forward without data loss
+  - Upload components live in components/upload/ directory
+  - File input on web: use `<input type="file" style={{display:"none"}} />` with ref.click() from Pressable
 ---
