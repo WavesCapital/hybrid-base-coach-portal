@@ -1,0 +1,437 @@
+{
+  "name": "Coach Portal MVP",
+  "description": "Web-based coach portal for uploading and managing fitness programs. Coaches upload PDFs, AI parses into structured programs, coaches review/edit with animations matching the Hybrid Base mobile app, then publish. See research.md for full context.",
+  "mode": "feature",
+  "projectPath": "~/hybrid-base-coach-portal",
+  "github": "wavescapital/hybrid-base-coach-portal",
+  "branch": "main",
+  "stack": "expo-mobile",
+  "skills": [
+    "building-ui",
+    "vercel-react-native-skills",
+    "react-native-best-practices",
+    "frontend-design",
+    "supabase-postgres-best-practices",
+    "data-fetching",
+    "ai-sdk"
+  ],
+  "researchDocs": ["research.md"],
+  "prerequisites": [
+    "GitHub repo must be created first: gh repo create wavescapital/hybrid-base-coach-portal --public",
+    "MinerU endpoint must be added to Hybrid Base backend (~/Hybrid-Lab-App-Emergent1-9/backend/) BEFORE starting - see US-003-PREREQ below"
+  ],
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Create Expo repo with web support",
+      "description": "Initialize the coach portal as a new Expo project with web support, Expo Router, Supabase client, Zustand state management, and Framer Motion for animations. Set up all required environment variables and root layout with providers.",
+      "skills": ["building-ui", "upgrading-expo"],
+      "acceptanceCriteria": [
+        "Expo project initialized with TypeScript template in existing repo",
+        "Web dependencies installed: react-dom, react-native-web, @expo/metro-runtime",
+        "Framer Motion installed for web animations",
+        "Zustand installed for state management",
+        "Expo Router configured for file-based routing",
+        "Supabase client configured with project ID uevqwbdumouoghymcqtc",
+        ".env.local created with: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, EXPO_PUBLIC_BACKEND_URL (https://api.hybridbase.app), OPENROUTER_API_KEY",
+        "app/_layout.tsx includes: ThemeProvider, Supabase session provider, test coach context (hardcoded coach_id for MVP)",
+        "lib/supabase.ts exports typed Supabase client",
+        "lib/testCoach.ts exports TEST_COACH_ID constant (test-coach-uuid-0001) for use throughout app",
+        "Folder structure created: app/, components/, lib/, state/, types/",
+        "Initial commit pushed to GitHub",
+        "npx tsc --noEmit passes with no type errors",
+        "npx expo lint passes with no errors",
+        "npx expo export --platform web builds successfully"
+      ],
+      "files": [
+        "package.json",
+        "app.json",
+        "tsconfig.json",
+        "app/_layout.tsx",
+        "app/index.tsx",
+        "lib/supabase.ts",
+        "lib/testCoach.ts",
+        ".env.local",
+        ".env.example"
+      ],
+      "dependsOn": []
+    },
+    {
+      "id": "US-002",
+      "title": "Database migrations for coach tables",
+      "description": "Create Supabase migrations for coaches and coach_programs tables with RLS policies. Seed a test coach for development.",
+      "skills": ["supabase-postgres-best-practices"],
+      "acceptanceCriteria": [
+        "coaches table created with: id, user_id, display_name, slug, bio, profile_photo_url, social_links, verification_status, created_at",
+        "coach_programs table created with: id, coach_id, title, slug, description, duration_weeks, difficulty, focus, equipment, template_data, source_pdf_url, status, created_at",
+        "exercises table has new columns: is_auto_created, auto_created_by, auto_created_at",
+        "RLS policies: coaches can read/write their own data, public can read published programs",
+        "Test coach seeded with id test-coach-uuid-0001, display_name Test Coach, slug test-coach",
+        "Migrations run successfully via Supabase CLI",
+        "npx tsc --noEmit passes with no type errors",
+        "npx expo lint passes with no errors"
+      ],
+      "files": [
+        "supabase/migrations/001_coaches_table.sql",
+        "supabase/migrations/002_coach_programs_table.sql",
+        "supabase/migrations/003_exercises_auto_created.sql",
+        "supabase/migrations/004_seed_test_coach.sql"
+      ],
+      "dependsOn": ["US-001"]
+    },
+    {
+      "id": "US-002B",
+      "title": "Supabase Storage buckets for uploads",
+      "description": "Create Supabase Storage buckets for PDF uploads and profile photos with appropriate policies.",
+      "skills": ["supabase-postgres-best-practices"],
+      "acceptanceCriteria": [
+        "coach-pdfs bucket created for program PDFs (private, 50MB limit)",
+        "coach-photos bucket created for profile photos (public, 5MB limit)",
+        "Storage policies: authenticated users can upload to their coach folder",
+        "Storage policies: coach-photos are publicly readable",
+        "Storage policies: coach-pdfs are readable only by the owning coach",
+        "lib/storage.ts exports uploadPDF and uploadProfilePhoto helper functions",
+        "Helper functions handle file naming with timestamps to prevent collisions",
+        "npx tsc --noEmit passes with no type errors"
+      ],
+      "files": [
+        "supabase/migrations/005_storage_buckets.sql",
+        "lib/storage.ts"
+      ],
+      "dependsOn": ["US-002"]
+    },
+    {
+      "id": "US-013",
+      "title": "Theme system and design tokens",
+      "description": "Create comprehensive theme system with Hybrid Base color palette, typography scale, spacing system, and Framer Motion spring configs. This is a foundation component needed by all UI stories.",
+      "skills": ["building-ui", "frontend-design"],
+      "acceptanceCriteria": [
+        "lib/theme.ts exports complete theme object",
+        "Core colors: neonPrimary=#08F0FF, neonSecondary=#00FF88, neonAccent=#FFA42D, txt=#F5FAFF, txtMuted=#8D9299, background=#0A0A0A",
+        "Phase colors mapped: Foundation, Building, Peak, Deload, Taper, Test",
+        "Workout type colors mapped: Strength, Running, Swimming, HYROX, Recovery",
+        "Intensity colors: Low=#00FF88, Moderate=#FEEC4A, High=#FFA42D, Very High=#FF4444",
+        "Typography scale: heading1-4, body, bodySmall, caption sizes with fontFamily",
+        "Spacing system: xs=4, sm=8, md=16, lg=24, xl=32, xxl=48",
+        "Border radius: sm=4, md=8, lg=12, xl=16, round=9999",
+        "Framer Motion spring configs: spring (stiffness: 300, damping: 30), springLight (stiffness: 200, damping: 25), springBouncy (stiffness: 400, damping: 20)",
+        "Dark mode as default (matches mobile app)",
+        "ThemeContext and useTheme hook exported for component access",
+        "npx tsc --noEmit passes with no type errors",
+        "npx expo lint passes with no errors"
+      ],
+      "files": [
+        "lib/theme.ts",
+        "lib/ThemeContext.tsx"
+      ],
+      "dependsOn": ["US-001"]
+    },
+    {
+      "id": "US-004",
+      "title": "OpenRouter LLM parsing with structured output",
+      "description": "Create lib/pdfParsing.ts that calls OpenRouter API with Claude Sonnet to parse markdown into structured program JSON with weeks, days, exercises. NOTE: Requires MinerU endpoint to already exist on backend (see prerequisites).",
+      "skills": ["ai-sdk", "data-fetching"],
+      "acceptanceCriteria": [
+        "lib/pdfParsing.ts created with parseProgram and extractMarkdown functions",
+        "extractMarkdown calls EXPO_PUBLIC_BACKEND_URL/pdf/extract endpoint to get markdown from PDF",
+        "parseProgram uses OpenRouter API with Claude Sonnet model (anthropic/claude-sonnet-4-20250514)",
+        "JSON schema defined for program structure: weeks, days, exercises with sets/reps/rest/notes",
+        "Handles supersets (grouped exercises with superset: true flag)",
+        "Handles EMOM workouts (emom: true with duration)",
+        "Handles cardio activities with duration/distance/zone",
+        "Returns typed ProgramStructure with all extracted data",
+        "Error handling for API failures, malformed responses, timeout (30s)",
+        "Includes retry logic (3 attempts with exponential backoff)",
+        "types/program.ts exports ProgramStructure, Week, Day, Exercise, Set types",
+        "npx tsc --noEmit passes with no type errors",
+        "npx expo lint passes with no errors"
+      ],
+      "files": [
+        "lib/pdfParsing.ts",
+        "types/program.ts"
+      ],
+      "dependsOn": ["US-002B"]
+    },
+    {
+      "id": "US-005",
+      "title": "Exercise matching with confidence scoring",
+      "description": "Create lib/exerciseMatching.ts that normalizes exercise names, matches against database using fuzzy_search_exercises RPC, and auto-creates unknown exercises.",
+      "skills": ["supabase-postgres-best-practices", "data-fetching"],
+      "acceptanceCriteria": [
+        "lib/exerciseMatching.ts created with matchExercises function",
+        "normalizeName function: lowercase, remove accents (normalize NFD), remove parentheticals, alphanumeric only",
+        "Exact match against exercises.name_normalized returns confidence 1.0",
+        "Fuzzy match via fuzzy_search_exercises RPC returns confidence based on similarity (0.55-0.99)",
+        "Unmatched exercises return confidence 0 with suggested normalized name",
+        "Auto-create option: creates new exercise with is_auto_created=true, auto_created_by=coach_id",
+        "provider_source set to 'coach_upload' for auto-created exercises",
+        "Returns array of ExerciseMatch with original_name, matched_exercise, confidence, is_new, exercise_id",
+        "types/exercise.ts exports ExerciseMatch and Exercise types",
+        "npx tsc --noEmit passes with no type errors",
+        "npx expo lint passes with no errors"
+      ],
+      "files": [
+        "lib/exerciseMatching.ts",
+        "types/exercise.ts"
+      ],
+      "dependsOn": ["US-004"]
+    },
+    {
+      "id": "US-006",
+      "title": "Responsive dashboard layout",
+      "description": "Create DashboardLayout component with responsive sidebar (desktop) and bottom tabs (mobile), consistent header with coach name/photo.",
+      "skills": ["building-ui", "frontend-design", "vercel-react-native-skills"],
+      "acceptanceCriteria": [
+        "components/layout/DashboardLayout.tsx created as wrapper component",
+        "Uses useWindowDimensions to detect web vs mobile breakpoints",
+        "Desktop (>768px): left sidebar with navigation (Dashboard, Programs, Profile)",
+        "Mobile: bottom tab navigation",
+        "Header component with coach name, profile photo from TEST_COACH_ID context",
+        "Active route highlighting in navigation using usePathname",
+        "Smooth layout transitions using Framer Motion",
+        "Uses Hybrid Base color palette from theme (lib/theme.ts)",
+        "Responsive breakpoints at 768px and 1024px",
+        "npx tsc --noEmit passes with no type errors",
+        "npx expo lint passes with no errors",
+        "npx expo export --platform web builds successfully"
+      ],
+      "files": [
+        "components/layout/DashboardLayout.tsx",
+        "components/layout/Sidebar.tsx",
+        "components/layout/Header.tsx",
+        "components/layout/BottomTabs.tsx"
+      ],
+      "dependsOn": ["US-001", "US-013"]
+    },
+    {
+      "id": "US-007",
+      "title": "Program dashboard with cards",
+      "description": "Create program dashboard page that lists all programs for current coach with ProgramCard components showing title, duration, status.",
+      "skills": ["building-ui", "frontend-design", "vercel-react-native-skills"],
+      "acceptanceCriteria": [
+        "app/index.tsx shows program dashboard wrapped in DashboardLayout",
+        "Fetches programs from coach_programs table for TEST_COACH_ID",
+        "state/useCoachStore.ts created with Zustand for coach data and programs list",
+        "ProgramCard component shows: title, duration_weeks, difficulty, status badge",
+        "Status badge colors: draft=yellow (#FEEC4A), active=green (#00FF88), archived=gray (#8D9299)",
+        "New Program button navigates to /programs/new/info",
+        "Empty state for first-time coaches with call-to-action button",
+        "Loading skeleton while fetching (3 placeholder cards)",
+        "Grid layout on desktop (3 columns), stack on mobile",
+        "npx tsc --noEmit passes with no type errors",
+        "npx expo lint passes with no errors",
+        "npx expo export --platform web builds successfully"
+      ],
+      "files": [
+        "app/index.tsx",
+        "components/program/ProgramCard.tsx",
+        "components/ui/Badge.tsx",
+        "components/ui/Card.tsx",
+        "components/ui/Skeleton.tsx",
+        "state/useCoachStore.ts"
+      ],
+      "dependsOn": ["US-006"]
+    },
+    {
+      "id": "US-008",
+      "title": "Coach profile setup and edit",
+      "description": "Create profile pages for coach to set up and edit their profile including display name, bio, photo, and social links.",
+      "skills": ["building-ui", "data-fetching", "frontend-design"],
+      "acceptanceCriteria": [
+        "app/profile/index.tsx for viewing/editing profile",
+        "ProfileForm component with: display_name (input), bio (textarea), profile_photo (upload)",
+        "SocialLinksForm component for: Instagram, TikTok, YouTube, Twitter handles (@ prefix auto-added)",
+        "Photo upload uses lib/storage.ts uploadProfilePhoto function",
+        "Slug auto-generated from display_name (lowercase, hyphenated, no special chars)",
+        "Form validation: display_name required (min 2 chars), slug unique check via Supabase",
+        "Updates coaches record in database for TEST_COACH_ID",
+        "Success toast on save using react-hot-toast or similar",
+        "npx tsc --noEmit passes with no type errors",
+        "npx expo lint passes with no errors",
+        "npx expo export --platform web builds successfully"
+      ],
+      "files": [
+        "app/profile/index.tsx",
+        "components/profile/ProfileForm.tsx",
+        "components/profile/SocialLinksForm.tsx",
+        "components/ui/Input.tsx",
+        "components/ui/Textarea.tsx",
+        "components/ui/Button.tsx",
+        "components/ui/Toast.tsx"
+      ],
+      "dependsOn": ["US-007"]
+    },
+    {
+      "id": "US-009",
+      "title": "Program info form and PDF upload",
+      "description": "Create multi-step program creation flow: Step 1 captures basic info, Step 2 uploads PDF and triggers parsing pipeline.",
+      "skills": ["data-fetching", "building-ui", "frontend-design"],
+      "acceptanceCriteria": [
+        "app/programs/new/index.tsx redirects to /programs/new/info",
+        "app/programs/new/info.tsx for Step 1: title, description, duration_weeks (number), difficulty (select), focus[] (multi-select), equipment[] (multi-select)",
+        "app/programs/new/upload.tsx for Step 2: PDF file selection and upload",
+        "state/useProgramStore.ts created with Zustand for program creation state (persists across steps)",
+        "PDFUploader component with drag-drop zone and file picker button",
+        "Uploads PDF to Supabase Storage using lib/storage.ts uploadPDF",
+        "ParsingProgress component shows stages: Uploading... → Extracting... → Parsing... → Matching...",
+        "Calls extractMarkdown (MinerU), then parseProgram (OpenRouter), then matchExercises",
+        "On success, stores parsed data in useProgramStore and navigates to /programs/new/review",
+        "Error handling with retry button for each stage that failed",
+        "Back button on Step 2 preserves Step 1 form data",
+        "npx tsc --noEmit passes with no type errors",
+        "npx expo lint passes with no errors",
+        "npx expo export --platform web builds successfully"
+      ],
+      "files": [
+        "app/programs/new/index.tsx",
+        "app/programs/new/info.tsx",
+        "app/programs/new/upload.tsx",
+        "components/upload/PDFUploader.tsx",
+        "components/upload/ParsingProgress.tsx",
+        "state/useProgramStore.ts"
+      ],
+      "dependsOn": ["US-005", "US-008"]
+    },
+    {
+      "id": "US-010",
+      "title": "Exercise review UI with inline editing",
+      "description": "Create exercise review page showing all parsed exercises with confidence badges, inline editing, and exercise picker for unmatched exercises.",
+      "skills": ["building-ui", "frontend-design", "vercel-react-native-skills", "react-native-best-practices"],
+      "acceptanceCriteria": [
+        "app/programs/new/review.tsx shows all parsed exercises from useProgramStore",
+        "ExerciseReviewList component with collapsible weeks (click to expand/collapse)",
+        "Days shown within expanded weeks, exercises within days",
+        "ExerciseReviewItem shows: original exercise name, matched exercise name, confidence badge, edit controls",
+        "ConfidenceBadge: green checkmark (#00FF88) >90%, yellow warning (#FEEC4A) 70-90%, red X (#FF4444) <70%",
+        "Inline editing for: sets (number), reps (text for ranges like '8-12'), rest (text like '90s'), notes (text)",
+        "Click exercise name opens ExercisePicker modal",
+        "ExercisePicker: search input, list of matching exercises from DB, click to select replacement",
+        "Add exercise button per day (opens ExercisePicker)",
+        "Remove exercise button with confirmation dialog",
+        "All changes update useProgramStore state",
+        "Continue to Preview button at bottom (navigates to /programs/new/preview)",
+        "npx tsc --noEmit passes with no type errors",
+        "npx expo lint passes with no errors",
+        "npx expo export --platform web builds successfully"
+      ],
+      "files": [
+        "app/programs/new/review.tsx",
+        "components/review/ExerciseReviewList.tsx",
+        "components/review/ExerciseReviewItem.tsx",
+        "components/review/ExercisePicker.tsx",
+        "components/review/ConfidenceBadge.tsx",
+        "components/ui/Modal.tsx",
+        "components/ui/ConfirmDialog.tsx"
+      ],
+      "dependsOn": ["US-009"]
+    },
+    {
+      "id": "US-011",
+      "title": "Program preview - Week expansion with animations",
+      "description": "Create ProgramPreviewSheet component for web using Framer Motion with expandable weeks, staggered animations, phase colors, and workout summaries.",
+      "skills": ["building-ui", "vercel-react-native-skills", "react-native-best-practices", "frontend-design"],
+      "acceptanceCriteria": [
+        "app/programs/new/preview.tsx shows full program preview from useProgramStore",
+        "ProgramPreviewSheet as main container with dark background (#0A0A0A)",
+        "WeekPreviewRow component: week number, phase name, phase color indicator bar on left",
+        "Click week row expands to show days with Framer Motion spring animation (useTheme().spring)",
+        "Staggered entrance animation for week items on page load (delay: index * 0.05)",
+        "DayWorkoutRow shows: day number, workout name, workout type icon",
+        "WorkoutRow pill shows: workout type with color, intensity indicator dots",
+        "Phase colors from lib/theme.ts: Foundation=#08F0FF, Building=#00FF88, Peak=#FFA42D, Deload=#8D9299, Taper=#A78BFA, Test=#FF4444",
+        "Workout type colors from lib/theme.ts: Strength=#00FF88, Running=#FC57E9, Swimming=#08F0FF, HYROX=#FF6B35, Recovery=#C586FF",
+        "Click workout row opens WorkoutDetailDrawer",
+        "Edit button returns to /programs/new/review",
+        "npx tsc --noEmit passes with no type errors",
+        "npx expo lint passes with no errors",
+        "npx expo export --platform web builds successfully"
+      ],
+      "files": [
+        "app/programs/new/preview.tsx",
+        "components/program/ProgramPreviewSheet.tsx",
+        "components/program/WeekPreviewRow.tsx",
+        "components/program/DayWorkoutRow.tsx",
+        "components/program/WorkoutRow.tsx",
+        "lib/animations.ts"
+      ],
+      "dependsOn": ["US-010", "US-013"]
+    },
+    {
+      "id": "US-012",
+      "title": "Workout detail drawer with animations",
+      "description": "Create WorkoutDetailDrawer component as modal overlay with slide-up animation, exercise cards with sets table, and cardio segment cards.",
+      "skills": ["building-ui", "vercel-react-native-skills", "react-native-best-practices", "frontend-design"],
+      "acceptanceCriteria": [
+        "WorkoutDetailDrawer as modal overlay component using Framer Motion AnimatePresence",
+        "Slide-up animation from bottom (initial: y: '100%', animate: y: 0) with spring physics",
+        "Backdrop fade animation (initial: opacity: 0, animate: opacity: 0.8)",
+        "Two rendering paths based on workout.type: strength exercises OR cardio segments",
+        "ExerciseCard for strength: exercise name, muscle groups tags, sets table",
+        "SetRow displays: SET number | REPS | WEIGHT (or % for relative) | RPE | REST",
+        "SegmentCard for cardio: segment name, duration OR distance, zone badge",
+        "Zone badges with colors: Zone 1=#00FF88, Zone 2=#FEEC4A, Zone 3=#FFA42D, Zone 4=#FF4444, Zone 5=#A78BFA",
+        "Vertical connector lines between segment cards showing flow",
+        "X button in top-right to close drawer",
+        "Click outside backdrop closes drawer (onBackdropClick)",
+        "npx tsc --noEmit passes with no type errors",
+        "npx expo lint passes with no errors",
+        "npx expo export --platform web builds successfully"
+      ],
+      "files": [
+        "components/program/WorkoutDetailDrawer.tsx",
+        "components/program/ExerciseCard.tsx",
+        "components/program/SetRow.tsx",
+        "components/program/SegmentCard.tsx"
+      ],
+      "dependsOn": ["US-011"]
+    },
+    {
+      "id": "US-014",
+      "title": "Save and publish flow",
+      "description": "Create save and publish functionality that saves program to coach_programs table with draft or active status, with success confirmation.",
+      "skills": ["data-fetching", "supabase-postgres-best-practices"],
+      "acceptanceCriteria": [
+        "SavePublishButtons component with Save as Draft and Publish buttons",
+        "Save as Draft saves to coach_programs with status='draft'",
+        "Publish saves to coach_programs with status='active'",
+        "template_data JSONB stores full program structure from useProgramStore",
+        "source_pdf_url stores the Supabase Storage URL from upload step",
+        "slug auto-generated from title (lowercase, hyphenated, remove special chars)",
+        "Unique constraint check on (coach_id, slug) before save, append -2, -3 etc if exists",
+        "coach_id set to TEST_COACH_ID",
+        "Success modal with: checkmark icon, 'Program saved!' message, View Program link",
+        "View Program link navigates to /programs/[id]",
+        "Error handling: show error message with retry button",
+        "app/programs/[id]/index.tsx shows saved program details (read-only preview)",
+        "npx tsc --noEmit passes with no type errors",
+        "npx expo lint passes with no errors",
+        "npx expo export --platform web builds successfully"
+      ],
+      "files": [
+        "app/programs/[id]/index.tsx",
+        "components/program/SavePublishButtons.tsx",
+        "components/ui/SuccessModal.tsx"
+      ],
+      "dependsOn": ["US-012"]
+    }
+  ],
+  "manualPrerequisites": {
+    "US-003-PREREQ": {
+      "title": "Add MinerU PDF extraction endpoint to Hybrid Base backend",
+      "description": "This must be done MANUALLY in the Hybrid Base backend repo BEFORE starting Ralph. Ralph cannot modify cross-repo files.",
+      "repo": "~/Hybrid-Lab-App-Emergent1-9/backend/",
+      "file": "server.py",
+      "requirements": [
+        "POST /pdf/extract endpoint that accepts PDF URL in request body",
+        "Downloads PDF to temp location",
+        "Runs MinerU extraction to convert to markdown",
+        "Returns markdown content in response",
+        "50MB file size limit enforced",
+        "Rate limited to 50/minute",
+        "Error handling for download failures, extraction failures",
+        "CORS allowed for coach portal origin"
+      ],
+      "dependencies": ["MinerU must be installed: pip install 'mineru[all]'"]
+    }
+  }
+}
