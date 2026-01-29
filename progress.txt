@@ -17,6 +17,9 @@
 - Quality checks: `npx tsc --noEmit`, `npx expo lint`, `npx expo export --platform web`
 - ESLint 9 with eslint-config-expo flat config
 - When initializing Expo in non-empty dir, use temp dir and copy files over
+- Supabase migrations live in `supabase/migrations/` with numeric prefixes (001_, 002_, etc.)
+- Use `IF NOT EXISTS` / `ON CONFLICT DO NOTHING` for idempotent migrations
+- Test coach user_id is `00000000-0000-0000-0000-000000000001` (dummy UUID for MVP)
 
 ---
 
@@ -34,4 +37,19 @@
   - ESLint auto-installs on first `npx expo lint` run (creates eslint.config.js)
   - Empty directories cause lint errors - ensure directories have files before linting
   - `expo-router/entry` must be set as "main" in package.json for routing to work
+---
+
+## [Iteration 2] 2026-01-29 - US-002
+- Created Supabase migrations for coaches and coach_programs tables
+- coaches table: id, user_id, display_name, slug, bio, profile_photo_url, social_links, verification_status, created_at
+- coach_programs table: id, coach_id, title, slug, description, duration_weeks, difficulty, focus, equipment, template_data, source_pdf_url, status, created_at
+- Added auto-created columns to exercises table (is_auto_created, auto_created_by, auto_created_at) with IF NOT EXISTS guards
+- RLS policies: coaches read/write own data, public read published programs and verified coaches
+- Seeded test coach (test-coach-uuid-0001, display_name "Test Coach", slug "test-coach")
+- Files changed: supabase/migrations/001_coaches_table.sql, 002_coach_programs_table.sql, 003_exercises_auto_created.sql, 004_seed_test_coach.sql, prd.json
+- **Learnings for future iterations:**
+  - SQL migrations don't affect TypeScript checks - `npx tsc --noEmit` and lint still pass
+  - Empty directories (components/, state/, types/) cause `npx expo lint` to fail with "no files matching pattern" - run lint on specific directories with files instead
+  - Use DO $$ blocks for conditional ALTER TABLE to make migrations idempotent
+  - coach_programs has UNIQUE(coach_id, slug) constraint - must handle slug collisions in app code
 ---
