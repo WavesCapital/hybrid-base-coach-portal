@@ -84,3 +84,21 @@
   - Zone colors use `Record<number, string>` for numeric zone IDs (1-5)
   - `npx expo lint` still fails on empty `components/` dir - use `npx expo lint ./app ./lib` to target specific dirs
 ---
+
+## [Iteration 5] 2026-01-29 - US-004
+- Created types/program.ts with full program type hierarchy: ProgramStructure, Week, Day, Exercise, ExerciseSet, CardioSegment
+- Created lib/pdfParsing.ts with two main functions:
+  - `extractMarkdown(pdfUrl)`: calls EXPO_PUBLIC_BACKEND_URL/pdf/extract to get markdown from PDF via MinerU
+  - `parseProgram(markdown)`: calls OpenRouter API with Claude Sonnet (anthropic/claude-sonnet-4-20250514) to parse markdown into ProgramStructure JSON
+- Handles supersets (grouped with supersetGroup number), EMOM workouts (emom flag + duration), cardio segments
+- Retry logic: 3 attempts with exponential backoff (1s, 2s delays)
+- 30s timeout via AbortController on all fetch calls
+- Validates response has title, durationWeeks, and non-empty weeks array
+- Files changed: types/program.ts, lib/pdfParsing.ts
+- **Learnings for future iterations:**
+  - OpenRouter API uses standard OpenAI chat completions format at https://openrouter.ai/api/v1/chat/completions
+  - LLM responses may include markdown code fences even when told not to - always strip them
+  - Use temperature 0.1 for structured extraction to minimize hallucination
+  - The types in types/program.ts are the canonical program structure used throughout the app
+  - AbortController + setTimeout pattern works for fetch timeout in both Node and browser
+---
