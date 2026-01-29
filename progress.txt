@@ -102,3 +102,20 @@
   - The types in types/program.ts are the canonical program structure used throughout the app
   - AbortController + setTimeout pattern works for fetch timeout in both Node and browser
 ---
+
+## [Iteration 6] 2026-01-29 - US-005
+- Created types/exercise.ts with Exercise (DB record) and ExerciseMatch (matching result) interfaces
+- Created lib/exerciseMatching.ts with:
+  - `normalizeName(name)`: lowercase, remove accents (NFD), remove parentheticals, alphanumeric+spaces only
+  - `matchExercises(names, options)`: matches exercise names against DB with 3-tier strategy
+  - Exact match on name_normalized → confidence 1.0
+  - Fuzzy match via fuzzy_search_exercises RPC → confidence 0.55–0.99
+  - No match → confidence 0 with suggested_name, or auto-create if enabled
+  - `autoCreateExercise`: inserts with is_auto_created=true, provider_source='coach_upload'
+- Files changed: types/exercise.ts, lib/exerciseMatching.ts, prd.json
+- **Learnings for future iterations:**
+  - The exercises table has a `fuzzy_search_exercises` RPC for similarity matching
+  - Exercise matching returns ExerciseMatch[] with confidence scores for UI badges
+  - normalizeName is reusable for any name-comparison logic
+  - Auto-created exercises get provider_source='coach_upload' to distinguish from curated ones
+---
