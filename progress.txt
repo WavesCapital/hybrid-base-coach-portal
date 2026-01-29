@@ -28,8 +28,11 @@
 - Use `IF NOT EXISTS` / `ON CONFLICT DO NOTHING` for idempotent migrations
 - Test coach user_id is `00000000-0000-0000-0000-000000000001` (dummy UUID for MVP)
 - Zustand stores in `state/` directory - useCoachStore for coach data + programs list
-- Reusable UI primitives in `components/ui/` - Card, Badge, Skeleton
+- Reusable UI primitives in `components/ui/` - Card, Badge, Skeleton, Input, Textarea, Button, Toast
 - Program-specific components in `components/program/` - ProgramCard, etc.
+- Profile components in `components/profile/` - ProfileForm, SocialLinksForm
+- Platform.OS === "web" for web-only HTML elements (file input, etc.)
+- Social links stored as Record<string, string> in coaches.social_links JSONB column
 
 ---
 
@@ -163,4 +166,25 @@
   - Supabase queries return `data` typed as `any[]` - cast to specific types at call site
   - Grid columns use percentage widths with gap calculation: `(100 - (columns-1) * 2) / columns`%
   - Empty `StyleSheet.create({})` entries are fine for Pressable style arrays that need a base key
+---
+
+## [Iteration 9] 2026-01-29 - US-008
+- Created coach profile setup and edit page at app/profile/index.tsx
+- Created reusable UI primitives: Input, Textarea, Button, Toast in components/ui/
+- Created ProfileForm component with display name, bio, photo upload, auto-generated slug
+- Created SocialLinksForm component for Instagram, TikTok, YouTube, Twitter handles with @ prefix auto-add
+- Photo upload uses lib/storage.ts uploadProfilePhoto with web file input
+- Form validation: display_name required (min 2 chars), slug uniqueness check via Supabase
+- Updates coaches record for TEST_COACH_ID, success toast on save
+- Slug auto-generated from display_name (lowercase, hyphenated, no special chars)
+- Files changed: components/ui/Input.tsx, components/ui/Textarea.tsx, components/ui/Button.tsx, components/ui/Toast.tsx, components/profile/ProfileForm.tsx, components/profile/SocialLinksForm.tsx, app/profile/index.tsx, prd.json
+- Browser verification: SKIPPED (dev server not running)
+- Manual verification recommended before merge
+- **Learnings for future iterations:**
+  - Platform.OS === "web" check needed for HTML file input elements (Expo web renders as HTML)
+  - Use useRef<HTMLInputElement> for file input references on web
+  - Toast component uses Animated API with useNativeDriver for cross-platform opacity transitions
+  - Social links stored as Record<string, string> in coaches.social_links JSONB column
+  - Profile components in components/profile/ directory following existing pattern (program/ for program components)
+  - Button component supports primary/secondary/outline variants with loading/disabled states
 ---
