@@ -6,6 +6,9 @@ import { DashboardLayout } from "../../../components/layout/DashboardLayout";
 import { Button } from "../../../components/ui/Button";
 import { ProgramPreviewSheet } from "../../../components/program/ProgramPreviewSheet";
 import { WorkoutDetailDrawer } from "../../../components/program/WorkoutDetailDrawer";
+import { SavePublishButtons } from "../../../components/program/SavePublishButtons";
+import { SuccessModal } from "../../../components/ui/SuccessModal";
+import { Toast } from "../../../components/ui/Toast";
 import { useProgramStore } from "../../../state/useProgramStore";
 import { useCoachStore } from "../../../state/useCoachStore";
 import type { Day } from "../../../types/program";
@@ -14,8 +17,14 @@ export default function ProgramPreviewScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { coach } = useCoachStore();
-  const { parsedProgram } = useProgramStore();
+  const { parsedProgram, reset } = useProgramStore();
   const [selectedDay, setSelectedDay] = useState<Day | null>(null);
+  const [savedProgramId, setSavedProgramId] = useState<string | null>(null);
+  const [savedStatus, setSavedStatus] = useState<"draft" | "active" | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("error");
+  const [showToast, setShowToast] = useState(false);
   if (!parsedProgram) {
     return (
       <DashboardLayout
@@ -77,7 +86,45 @@ export default function ProgramPreviewScreen() {
               router.push("/programs/new/review" as never)
             }
           />
+          <SavePublishButtons
+            onSuccess={(programId, status) => {
+              setSavedProgramId(programId);
+              setSavedStatus(status);
+              setShowSuccess(true);
+            }}
+            onError={(error) => {
+              setToastMessage(error);
+              setToastType("error");
+              setShowToast(true);
+            }}
+          />
         </View>
+
+        <SuccessModal
+          visible={showSuccess}
+          message={
+            savedStatus === "active"
+              ? "Program published!"
+              : "Program saved as draft!"
+          }
+          onViewProgram={() => {
+            setShowSuccess(false);
+            reset();
+            router.push(`/programs/${savedProgramId}` as never);
+          }}
+          onClose={() => {
+            setShowSuccess(false);
+            reset();
+            router.push("/" as never);
+          }}
+        />
+
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          visible={showToast}
+          onDismiss={() => setShowToast(false)}
+        />
       </View>
     </DashboardLayout>
   );

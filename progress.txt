@@ -280,3 +280,28 @@
   - Vertical connector lines between SegmentCards use simple View elements with fixed width/height and subtle bg color
   - Zone colors use Record<number, string> keyed by zone number (1-5) from theme.colors.zone
 ---
+
+## [Iteration 14] 2026-01-29 - US-014
+- Created save and publish flow for programs
+- Created components/program/SavePublishButtons.tsx: Save as Draft and Publish buttons that insert into coach_programs table via Supabase
+  - generateSlug from title (lowercase, hyphenated, no special chars)
+  - getUniqueSlug checks for (coach_id, slug) collisions, appends -2, -3 etc
+  - Sets coach_id to TEST_COACH_ID, stores template_data as JSONB, source_pdf_url from upload step
+- Created components/ui/SuccessModal.tsx: checkmark icon, success message, View Program and Back to Dashboard buttons
+- Created app/programs/[id]/index.tsx: read-only program detail page
+  - Fetches program from coach_programs by ID via Supabase
+  - Shows title, status badge, difficulty, duration, and full ProgramPreviewSheet with WorkoutDetailDrawer
+  - Loading spinner, error state with back-to-dashboard button
+- Integrated SavePublishButtons and SuccessModal into app/programs/new/preview.tsx
+  - On success: shows SuccessModal, resets useProgramStore, navigates to program detail or dashboard
+  - On error: shows Toast with error message and retry capability
+- Files changed: components/program/SavePublishButtons.tsx, components/ui/SuccessModal.tsx, app/programs/[id]/index.tsx, app/programs/new/preview.tsx, prd.json
+- Browser verification: SKIPPED (dev server not running)
+- Manual verification recommended before merge
+- **Learnings for future iterations:**
+  - Dynamic routes in Expo Router use [id] directory naming (app/programs/[id]/index.tsx)
+  - useLocalSearchParams<{ id: string }>() extracts dynamic route params
+  - `for (;;)` avoids ESLint no-constant-condition warning vs `while (true)`
+  - coach_programs has UNIQUE(coach_id, slug) constraint - must check and increment suffix before insert
+  - useProgramStore.reset() clears all state after successful save to prevent stale data in creation flow
+---
