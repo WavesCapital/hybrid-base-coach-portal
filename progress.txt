@@ -39,6 +39,7 @@
 - Multi-select chip pattern: Pressable with conditional border/bg color, toggleArrayItem helper
 - Review components in `components/review/` - ExerciseReviewList, ExerciseReviewItem, ExercisePicker, ConfidenceBadge
 - Modal/ConfirmDialog in `components/ui/` - use absolute positioning with zIndex 1000+ for overlays
+- Shared Framer Motion animation presets in `lib/animations.ts` - staggeredItem, expandCollapse, slideUp, backdropFade
 - types/program.ts `Exercise` vs types/exercise.ts `Exercise` - alias as `ProgramExercise` / `DBExercise` when importing both
 
 ---
@@ -235,4 +236,27 @@
   - ExercisePicker uses debounced Supabase ilike query (300ms delay) for responsive search
   - useProgramStore actions use deeply nested immutable updates (map over weeks → days → exercises)
   - Import aliasing needed when both types/program.ts and types/exercise.ts export `Exercise` - use `as ProgramExercise` / `as DBExercise`
+---
+
+## [Iteration 12] 2026-01-29 - US-011
+- Created program preview page with week expansion animations at app/programs/new/preview.tsx
+- Created lib/animations.ts with shared Framer Motion animation configs (staggeredItem, expandCollapse, slideUp, backdropFade)
+- Created components/program/ProgramPreviewSheet.tsx: main container with program header, stats pills (weeks/days/exercises/difficulty), and scrollable weeks list with staggered entrance
+- Created components/program/WeekPreviewRow.tsx: expandable week rows with phase color bar on left, phase badge, click to expand/collapse days with Framer Motion spring animation
+- Created components/program/DayWorkoutRow.tsx: day items within expanded weeks showing day number badge, workout name, workout type/intensity via WorkoutRow
+- Created components/program/WorkoutRow.tsx: workout type pill with color dot + intensity dots indicator
+- Edit button returns to /programs/new/review
+- WorkoutDetailDrawer deferred to US-012 - onDayPress wired but no drawer rendering yet
+- Files changed: lib/animations.ts, components/program/ProgramPreviewSheet.tsx, WeekPreviewRow.tsx, DayWorkoutRow.tsx, WorkoutRow.tsx, app/programs/new/preview.tsx, prd.json
+- Browser verification: SKIPPED (dev server not running)
+- Manual verification recommended before merge
+- **Learnings for future iterations:**
+  - lib/animations.ts provides reusable Framer Motion animation presets - import staggeredItem, expandCollapse, slideUp, backdropFade
+  - staggeredItem(index) returns initial/animate props for staggered list entrance (delay: index * 0.05)
+  - expandCollapse animates height: 0 ↔ auto with spring physics for collapsible sections
+  - WeekPreviewRow uses local useState for expand/collapse - no store needed for UI-only state
+  - Phase color lookup: theme.colors.phase[week.phase || ""] with fallback to txtMuted
+  - Workout type color lookup: theme.colors.workoutType[day.workoutType] with fallback to txtMuted
+  - Underscore-prefixed unused vars (_selectedDay) still trigger ESLint warnings - remove unused state entirely instead
+  - Preview page is ready for WorkoutDetailDrawer integration in US-012 (just add import + render)
 ---
