@@ -15,6 +15,8 @@
 - Supabase project ID: uevqwbdumouoghymcqtc
 - Backend URL: https://api.hybridbase.app
 - Quality checks: `npx tsc --noEmit`, `npx expo lint`, `npx expo export --platform web`
+- Theme: import `useTheme` from `lib/ThemeContext` for colors, spacing, typography, springs
+- Theme spring configs: `theme.spring`, `theme.springLight`, `theme.springBouncy` for Framer Motion
 - ESLint 9 with eslint-config-expo flat config
 - When initializing Expo in non-empty dir, use temp dir and copy files over
 - Supabase migrations live in `supabase/migrations/` with numeric prefixes (001_, 002_, etc.)
@@ -68,4 +70,17 @@
   - Storage policies go on storage.objects table, not on the bucket itself
   - storage.foldername(name) returns array of folder segments - use [1] for top-level folder
   - coach-pdfs is private (no public URL works without signed URL in production), but getPublicUrl still returns a URL string for storage reference
+---
+
+## [Iteration 4] 2026-01-29 - US-013
+- Created lib/theme.ts with complete theme object: colors (core, phase, workout type, intensity, status, zone), typography scale (heading1-4, body, bodySmall, caption), spacing system (xs-xxl), border radius (sm-round), Framer Motion spring configs (spring, springLight, springBouncy)
+- Created lib/ThemeContext.tsx with ThemeProvider component and useTheme hook
+- Updated app/_layout.tsx to wrap app in ThemeProvider
+- Files changed: lib/theme.ts, lib/ThemeContext.tsx, app/_layout.tsx
+- **Learnings for future iterations:**
+  - Theme is accessed via `useTheme()` hook which returns the full theme object
+  - Spring configs are at top level: `theme.spring`, `theme.springLight`, `theme.springBouncy`
+  - Color maps (phase, workoutType, intensity, status) use `Record<string, string>` for flexible key lookup
+  - Zone colors use `Record<number, string>` for numeric zone IDs (1-5)
+  - `npx expo lint` still fails on empty `components/` dir - use `npx expo lint ./app ./lib` to target specific dirs
 ---
