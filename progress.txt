@@ -260,3 +260,23 @@
   - Underscore-prefixed unused vars (_selectedDay) still trigger ESLint warnings - remove unused state entirely instead
   - Preview page is ready for WorkoutDetailDrawer integration in US-012 (just add import + render)
 ---
+
+## [Iteration 13] 2026-01-29 - US-012
+- Created WorkoutDetailDrawer as modal overlay with Framer Motion AnimatePresence slide-up + backdrop fade animations
+- Created ExerciseCard component for strength exercises: name, muscle group tags, superset/EMOM badges, sets table
+- Created SetRow + SetTableHeader components: tabular display with SET | REPS | WEIGHT | RPE | REST columns
+- Created SegmentCard component for cardio segments: zone badges with zone colors, duration/distance details, vertical connector lines between segments
+- Integrated WorkoutDetailDrawer into preview page (app/programs/new/preview.tsx) with selectedDay state
+- Two rendering paths: strength exercises (ExerciseCard list) vs cardio segments (SegmentCard list with connectors)
+- Slide-up animation (y: 100% → 0) with spring physics, backdrop fade (opacity: 0 → 0.8)
+- Close via X button or backdrop click, handle bar at top
+- Files changed: components/program/WorkoutDetailDrawer.tsx, ExerciseCard.tsx, SetRow.tsx, SegmentCard.tsx, app/programs/new/preview.tsx, prd.json
+- Browser verification: SKIPPED (dev server not running)
+- Manual verification recommended before merge
+- **Learnings for future iterations:**
+  - slideUp and backdropFade animation presets from lib/animations.ts work perfectly for drawer overlays
+  - Two rendering paths based on workout content: check exercises.length === 0 && cardioSegments.length > 0 for cardio mode
+  - SetTableHeader is a separate export from SetRow.tsx for reuse in other table contexts
+  - Vertical connector lines between SegmentCards use simple View elements with fixed width/height and subtle bg color
+  - Zone colors use Record<number, string> keyed by zone number (1-5) from theme.colors.zone
+---

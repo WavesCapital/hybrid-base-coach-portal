@@ -1,18 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "../../../lib/ThemeContext";
 import { DashboardLayout } from "../../../components/layout/DashboardLayout";
 import { Button } from "../../../components/ui/Button";
 import { ProgramPreviewSheet } from "../../../components/program/ProgramPreviewSheet";
+import { WorkoutDetailDrawer } from "../../../components/program/WorkoutDetailDrawer";
 import { useProgramStore } from "../../../state/useProgramStore";
 import { useCoachStore } from "../../../state/useCoachStore";
+import type { Day } from "../../../types/program";
 
 export default function ProgramPreviewScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { coach } = useCoachStore();
   const { parsedProgram } = useProgramStore();
+  const [selectedDay, setSelectedDay] = useState<Day | null>(null);
   if (!parsedProgram) {
     return (
       <DashboardLayout
@@ -58,7 +61,12 @@ export default function ProgramPreviewScreen() {
       <View style={styles.pageContainer}>
         <ProgramPreviewSheet
           program={parsedProgram}
-          onDayPress={() => {}}
+          onDayPress={(day) => setSelectedDay(day)}
+        />
+
+        <WorkoutDetailDrawer
+          day={selectedDay}
+          onClose={() => setSelectedDay(null)}
         />
 
         <View style={styles.actions}>
