@@ -2,6 +2,13 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "../../lib/ThemeContext";
 import type { CardioSegment } from "../../types/program";
+import {
+  formatDuration,
+  formatDistance,
+  formatRest,
+  getSegmentTypeLabel,
+  getZoneColor,
+} from "../../lib/cardioFormatters";
 
 interface SegmentCardProps {
   segment: CardioSegment;
@@ -11,10 +18,7 @@ interface SegmentCardProps {
 
 export function SegmentCard({ segment, index, isLast }: SegmentCardProps) {
   const theme = useTheme();
-  const zoneColor: string =
-    segment.zone != null
-      ? theme.colors.zone[segment.zone] || theme.colors.txtMuted
-      : theme.colors.txtMuted;
+  const zoneColor = getZoneColor(segment.target_zone);
 
   return (
     <View style={styles.wrapper}>
@@ -55,9 +59,9 @@ export function SegmentCard({ segment, index, isLast }: SegmentCardProps) {
               style={[theme.typography.heading4, { color: theme.colors.txt, flex: 1 }]}
               numberOfLines={1}
             >
-              {segment.name}
+              {getSegmentTypeLabel(segment.segment_type)}
             </Text>
-            {segment.zone != null ? (
+            {segment.target_zone != null ? (
               <View
                 style={[
                   styles.zoneBadge,
@@ -70,14 +74,14 @@ export function SegmentCard({ segment, index, isLast }: SegmentCardProps) {
                     { color: zoneColor, fontWeight: "600" },
                   ]}
                 >
-                  Zone {segment.zone}
+                  Zone {segment.target_zone}
                 </Text>
               </View>
             ) : null}
           </View>
 
           <View style={styles.detailsRow}>
-            {segment.duration ? (
+            {segment.duration_seconds ? (
               <View style={styles.detail}>
                 <Text
                   style={[
@@ -93,11 +97,11 @@ export function SegmentCard({ segment, index, isLast }: SegmentCardProps) {
                     { color: theme.colors.txt, fontWeight: "600" },
                   ]}
                 >
-                  {segment.duration}
+                  {formatDuration(segment.duration_seconds)}
                 </Text>
               </View>
             ) : null}
-            {segment.distance ? (
+            {segment.distance_meters ? (
               <View style={styles.detail}>
                 <Text
                   style={[
@@ -113,7 +117,47 @@ export function SegmentCard({ segment, index, isLast }: SegmentCardProps) {
                     { color: theme.colors.txt, fontWeight: "600" },
                   ]}
                 >
-                  {segment.distance}
+                  {formatDistance(segment.distance_meters)}
+                </Text>
+              </View>
+            ) : null}
+            {segment.repeat_count > 1 ? (
+              <View style={styles.detail}>
+                <Text
+                  style={[
+                    theme.typography.caption,
+                    { color: theme.colors.txtMuted },
+                  ]}
+                >
+                  Repeats
+                </Text>
+                <Text
+                  style={[
+                    theme.typography.bodySmall,
+                    { color: theme.colors.txt, fontWeight: "600" },
+                  ]}
+                >
+                  {segment.repeat_count}×
+                </Text>
+              </View>
+            ) : null}
+            {segment.rest_seconds ? (
+              <View style={styles.detail}>
+                <Text
+                  style={[
+                    theme.typography.caption,
+                    { color: theme.colors.txtMuted },
+                  ]}
+                >
+                  Rest
+                </Text>
+                <Text
+                  style={[
+                    theme.typography.bodySmall,
+                    { color: theme.colors.txt, fontWeight: "600" },
+                  ]}
+                >
+                  {formatRest(segment.rest_seconds)}
                 </Text>
               </View>
             ) : null}

@@ -1,27 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useTheme } from "../../lib/ThemeContext";
 import { ExerciseReviewItem } from "./ExerciseReviewItem";
 import { ExercisePicker } from "./ExercisePicker";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { CardioSegmentList } from "./CardioSegmentList";
+import { CardioSegmentSheet } from "./CardioSegmentSheet";
 import { useProgramStore } from "../../state/useProgramStore";
+import { getTestUserMaxes, type UserMaxes } from "../../lib/userMaxes";
 import type { Exercise as DBExercise } from "../../types/exercise";
+import type { CardioSegment } from "../../types/program";
 
 export function ExerciseReviewList() {
   const theme = useTheme();
   const {
     parsedProgram,
     exerciseMatches,
-    updateExerciseSet,
     updateExerciseNotes,
     replaceExercise,
     removeExercise,
     addExercise,
+    updateExerciseReferenceLift,
+    updateSingleSet,
+    addSetToExercise,
+    removeSetFromExercise,
+    updateCardioSegment,
+    addCardioSegment,
+    removeCardioSegment,
   } = useProgramStore();
 
+  const [userMaxes, setUserMaxes] = useState<UserMaxes | null>(null);
   const [expandedWeeks, setExpandedWeeks] = useState<Set<number>>(
     new Set([0]),
   );
+
+  // Fetch test user's maxes for percentage weight calculation
+  useEffect(() => {
+    getTestUserMaxes().then(setUserMaxes).catch(console.error);
+  }, []);
   const [pickerState, setPickerState] = useState<{
     visible: boolean;
     weekIndex: number;
@@ -38,6 +54,14 @@ export function ExerciseReviewList() {
     exerciseIndex: number;
     name: string;
   }>({ visible: false, weekIndex: 0, dayIndex: 0, exerciseIndex: 0, name: "" });
+
+  const [cardioSheetState, setCardioSheetState] = useState<{
+    visible: boolean;
+    weekIndex: number;
+    dayIndex: number;
+    segmentIndex: number;
+    segment: CardioSegment | null;
+  }>({ visible: false, weekIndex: 0, dayIndex: 0, segmentIndex: 0, segment: null });
 
   if (!parsedProgram) return null;
 
@@ -203,6 +227,7 @@ export function ExerciseReviewList() {
                         key={`${wi}-${di}-${ei}`}
                         exercise={exercise}
                         match={findMatch(exercise.name)}
+                        userMaxes={userMaxes}
                         onPressName={() =>
                           setPickerState({
                             visible: true,
@@ -213,17 +238,18 @@ export function ExerciseReviewList() {
                             currentName: exercise.name,
                           })
                         }
-                        onUpdateSets={(v) =>
-                          updateExerciseSet(wi, di, ei, "sets", v)
+                        onUpdateSingleSet={(si, field, val) =>
+                          updateSingleSet(wi, di, ei, si, field, val)
                         }
-                        onUpdateReps={(v) =>
-                          updateExerciseSet(wi, di, ei, "reps", v)
-                        }
-                        onUpdateRest={(v) =>
-                          updateExerciseSet(wi, di, ei, "rest", v)
+                        onAddSet={() => addSetToExercise(wi, di, ei)}
+                        onRemoveSet={(si) =>
+                          removeSetFromExercise(wi, di, ei, si)
                         }
                         onUpdateNotes={(v) =>
                           updateExerciseNotes(wi, di, ei, v)
+                        }
+                        onUpdateReferenceLift={(v) =>
+                          updateExerciseReferenceLift(wi, di, ei, v)
                         }
                         onRemove={() =>
                           setConfirmRemove({
@@ -267,6 +293,53 @@ export function ExerciseReviewList() {
                         + Add Exercise
                       </Text>
                     </Pressable>
+
+                    {/* Cardio Segments - show for Running/Mixed/HYROX days */}
+                    {(day.workoutType === "Running" ||
+                      day.workoutType === "Mixed" ||
+                      day.workoutType === "HYROX") && (
+                      <View style={{ marginTop: theme.spacing.md }}>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: theme.spacing.xs,
+                          }}
+                        >
+                          <Text
+                            style={[
+                              theme.typography.body,
+                              { color: theme.colors.txt, fontWeight: "600" },
+                            ]}
+                          >
+                            Cardio Segments
+                          </Text>
+                          <Text
+                            style={[
+                              theme.typography.caption,
+                              { color: theme.colors.txtMuted },
+                            ]}
+                          >
+                            {(day.cardioSegments ?? []).length} segments
+                          </Text>
+                        </View>
+                        <CardioSegmentList
+                          segments={day.cardioSegments ?? []}
+                          onSelectSegment={(si) =>
+                            setCardioSheetState({
+                              visible: true,
+                              weekIndex: wi,
+                              dayIndex: di,
+                              segmentIndex: si,
+                              segment: day.cardioSegments?.[si] ?? null,
+                            })
+                          }
+                          onAddSegment={() => addCardioSegment(wi, di)}
+                          onRemoveSegment={(si) => removeCardioSegment(wi, di, si)}
+                        />
+                      </View>
+                    )}
                   </View>
                 ))}
               </View>
@@ -291,6 +364,29 @@ export function ExerciseReviewList() {
         confirmLabel="Remove"
         onConfirm={handleConfirmRemove}
         onCancel={() => setConfirmRemove({ ...confirmRemove, visible: false })}
+      />
+
+      {/* Cardio Segment Edit Sheet */}
+      <CardioSegmentSheet
+        visible={cardioSheetState.visible}
+        segment={cardioSheetState.segment}
+        onClose={() => setCardioSheetState({ ...cardioSheetState, visible: false })}
+        onSave={(updates) => {
+          updateCardioSegment(
+            cardioSheetState.weekIndex,
+            cardioSheetState.dayIndex,
+            cardioSheetState.segmentIndex,
+            updates
+          );
+          setCardioSheetState({ ...cardioSheetState, visible: false });
+        }}
+        onDelete={() => {
+          removeCardioSegment(
+            cardioSheetState.weekIndex,
+            cardioSheetState.dayIndex,
+            cardioSheetState.segmentIndex
+          );
+        }}
       />
     </View>
   );

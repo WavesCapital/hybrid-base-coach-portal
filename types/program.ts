@@ -22,15 +22,54 @@ export interface Exercise {
   emomDuration?: string;
   notes?: string;
   exerciseId?: string;
+  /** Which 1RM to use for percentage-based weights (squat, bench, deadlift) */
+  referenceLift?: "squat" | "bench" | "deadlift" | null;
 }
 
-/** A cardio segment within a day's workout */
+/** All running segment types (exact match to Inner Flame app) */
+export type SegmentType =
+  | "warmup"
+  | "cooldown"
+  | "easy"
+  | "tempo"
+  | "interval"
+  | "recovery"
+  | "zone1"
+  | "zone2"
+  | "zone3"
+  | "zone4"
+  | "zone5"
+  | "interval_work"
+  | "interval_rest"
+  | "hill_up"
+  | "hill_down"
+  | "stride"
+  | "fartlek"
+  | "marathon_pace"
+  | "race_pace";
+
+/** A cardio segment within a day's workout (exact match to Inner Flame app) */
 export interface CardioSegment {
-  name: string;
-  duration?: string;
-  distance?: string;
-  zone?: number;
-  notes?: string;
+  id: string;
+  order_index: number;
+  segment_type: SegmentType;
+
+  // Duration OR Distance (mutually exclusive)
+  duration_seconds: number | null;
+  distance_meters: number | null;
+
+  // Open-ended flag (for flexible warmups/cooldowns)
+  is_open_ended: boolean;
+
+  // Intensity
+  target_zone: 1 | 2 | 3 | 4 | 5 | null;
+  target_pace_seconds_per_km: number | null;
+
+  // Intervals
+  repeat_count: number;
+  rest_seconds: number | null;
+
+  notes: string | null;
 }
 
 /** A single workout day */
